@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Materiais e Shading (PBR) · UC Elementos Multimídia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg: #1b1b1e; --bg-raised: #232327; --bg-panel: #29292e; --line: #3a3a40;
+  --text: #ecebe7; --text-dim: #a3a2a8; --text-faint: #6b6a70;
+  --accent: #ef7d22; --accent-dim: #b45a17;
+  --axis-x: #e5484d; --axis-y: #4c9f4c; --axis-z: #3b82c4;
+  --radius: 6px;
+  --display: 'Space Grotesk', sans-serif; --body: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--body); line-height:1.6; font-size:16px;}
+a{color:var(--accent);}
+a:focus-visible, button:focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
+.grid-bg{position:fixed; inset:0; z-index:-1; background-image:linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size:64px 64px; opacity:0.18; mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);}
+.topbar{position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.9rem 1.75rem; background:rgba(27,27,30,0.88); backdrop-filter: blur(10px); border-bottom:1px solid var(--line); flex-wrap:wrap;}
+.topbar .brand{font-family:var(--display); font-weight:600; font-size:0.95rem; letter-spacing:0.01em; color:var(--text); display:flex; align-items:center; gap:0.6rem; text-decoration:none;}
+.topbar .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent); box-shadow:0 0 10px var(--accent); flex-shrink:0;}
+.topbar .eyebrow{color:var(--text-faint); font-size:0.78rem; font-family:var(--mono);}
+.topnav{display:flex; gap:1.35rem; flex-wrap:wrap;}
+.topnav a{color:var(--text-dim); text-decoration:none; font-size:0.85rem; font-family:var(--mono); transition:color 0.15s;}
+.topnav a:hover{color:var(--accent);}
+.wrap{max-width:920px; margin:0 auto; padding:0 1.75rem;}
+.hero{padding:5.5rem 0 4rem; position:relative;}
+.hero .kicker{font-family:var(--mono); color:var(--accent); font-size:0.85rem; letter-spacing:0.06em; text-transform:uppercase; display:flex; align-items:center; gap:0.6rem; margin-bottom:1.4rem;}
+.hero .kicker::before{content:""; width:28px; height:1px; background:var(--accent);}
+.hero h1{font-family:var(--display); font-size:clamp(2.1rem, 5vw, 3.4rem); line-height:1.08; font-weight:700; margin:0 0 1.3rem; max-width:16ch;}
+.hero h1 em{font-style:normal; color:var(--accent);}
+.hero p.lead{font-size:1.12rem; color:var(--text-dim); max-width:58ch; margin:0 0 2.2rem;}
+.hero-meta{display:flex; gap:2.2rem; flex-wrap:wrap; border-top:1px solid var(--line); padding-top:1.4rem; margin-top:1rem;}
+.hero-meta .item{font-size:0.82rem; color:var(--text-faint); font-family:var(--mono);}
+.hero-meta .item strong{display:block; color:var(--text); font-family:var(--body); font-size:0.95rem; font-weight:600; margin-top:0.15rem;}
+section{padding:4.2rem 0; border-top:1px solid var(--line);}
+.sec-head{display:flex; align-items:baseline; gap:1rem; margin-bottom:1.8rem; flex-wrap:wrap;}
+.sec-num{font-family:var(--mono); color:var(--accent); font-size:0.95rem; flex-shrink:0;}
+.sec-head h2{font-family:var(--display); font-size:1.7rem; margin:0; font-weight:600;}
+.sec-sub{color:var(--text-dim); font-size:0.9rem; margin:-1rem 0 1.8rem;}
+p{color:var(--text-dim);}
+.lead-in{color:var(--text); font-size:1.02rem;}
+.kbd{font-family:var(--mono); background:var(--bg-panel); border:1px solid var(--line); border-bottom-width:2px; color:var(--text); padding:0.12rem 0.5rem; border-radius:4px; font-size:0.82rem; white-space:nowrap;}
+.feat-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin:1.5rem 0;}
+@media (max-width:640px){ .feat-grid{grid-template-columns:1fr;} }
+.feat-card{background:var(--bg-raised); border:1px solid var(--line); border-radius:var(--radius); padding:1.2rem 1.3rem;}
+.feat-card h3{font-family:var(--display); font-size:1rem; margin:0 0 0.5rem; color:var(--text); display:flex; align-items:center; gap:0.5rem;}
+.feat-card p{margin:0; font-size:0.92rem;}
+.transform-table{width:100%; border-collapse:collapse; margin:1.5rem 0 2rem; font-size:0.9rem;}
+.transform-table th, .transform-table td{text-align:left; padding:0.7rem 0.9rem; border-bottom:1px solid var(--line);}
+.transform-table th{font-family:var(--mono); color:var(--text-faint); font-weight:500; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em;}
+.transform-table td{color:var(--text-dim);}
+.transform-table td:first-child{color:var(--text); font-weight:600;}
+.callout{background:var(--bg-raised); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:0 var(--radius) var(--radius) 0; padding:1.1rem 1.4rem; margin:1.6rem 0; font-size:0.92rem;}
+.callout strong{color:var(--accent); font-family:var(--mono); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:0.4rem;}
+.callout p{margin:0; color:var(--text);}
+.callout.warn{border-left-color:var(--axis-x);}
+.callout.warn strong{color:var(--axis-x);}
+.callout.good{border-left-color:var(--axis-y);}
+.callout.good strong{color:var(--axis-y);}
+.steps{display:grid; gap:1rem; margin:1.8rem 0;}
+.step{display:grid; grid-template-columns:44px 1fr; gap:1.1rem; align-items:start; background:var(--bg-raised); border:1px solid var(--line); border-radius:var(--radius); padding:1.1rem 1.3rem;}
+.step-num{width:32px; height:32px; border-radius:50%; background:var(--bg-panel); border:1px solid var(--accent-dim); color:var(--accent); font-family:var(--mono); font-weight:700; font-size:0.9rem; display:flex; align-items:center; justify-content:center;}
+.step h4{margin:0 0 0.35rem; font-family:var(--body); font-weight:600; font-size:0.98rem; color:var(--text);}
+.step p{margin:0; font-size:0.9rem;}
+.step .why{margin-top:0.5rem; font-size:0.82rem; color:var(--text-faint); font-style:italic;}
+.trouble-grid{display:grid; gap:0.9rem; margin:1.6rem 0;}
+.trouble-item{display:grid; grid-template-columns:1fr 1fr; gap:1rem; background:var(--bg-raised); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+@media (max-width:640px){ .trouble-item{grid-template-columns:1fr;} }
+.trouble-item .prob, .trouble-item .fix{padding:1rem 1.2rem;}
+.trouble-item .prob{border-right:1px solid var(--line); background:rgba(229,72,77,0.06);}
+@media (max-width:640px){ .trouble-item .prob{border-right:none; border-bottom:1px solid var(--line);} }
+.trouble-item .fix{background:rgba(76,159,76,0.06);}
+.trouble-item .tag{font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:0.35rem;}
+.trouble-item .prob .tag{color:var(--axis-x);}
+.trouble-item .fix .tag{color:var(--axis-y);}
+.trouble-item p{margin:0; font-size:0.87rem; color:var(--text);}
+.roadmap{display:grid; gap:0.6rem; margin:1.8rem 0;}
+.rm-item{display:grid; grid-template-columns:44px 1fr auto; align-items:center; gap:1rem; padding:0.85rem 1.1rem; border:1px solid var(--line); border-radius:var(--radius); background:var(--bg-raised);}
+.rm-item.active{border-color:var(--accent); background:linear-gradient(90deg, rgba(239,125,34,0.1), transparent);}
+.rm-item.done{opacity:0.7;}
+.rm-num{font-family:var(--mono); color:var(--text-faint); font-size:0.95rem;}
+.rm-item.active .rm-num{color:var(--accent); font-weight:700;}
+.rm-title{font-weight:600; font-size:0.94rem;}
+.rm-item.active .rm-title{color:var(--text);}
+.rm-item:not(.active) .rm-title{color:var(--text-dim);}
+.rm-tag{font-family:var(--mono); font-size:0.7rem; color:var(--text-faint); border:1px solid var(--line); padding:0.2rem 0.55rem; border-radius:100px; white-space:nowrap;}
+.rm-item.active .rm-tag{color:var(--accent); border-color:var(--accent-dim);}
+.exercise{background:var(--bg-raised); border:1px solid var(--line); border-radius:var(--radius); padding:1.8rem 2rem; margin:1.8rem 0;}
+.exercise .ex-kicker{font-family:var(--mono); color:var(--accent); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.6rem;}
+.exercise h3{font-family:var(--display); margin:0 0 1rem; font-size:1.2rem;}
+.exercise ol{padding-left:1.3rem; margin:0; color:var(--text-dim);}
+.exercise li{margin-bottom:0.75rem; padding-left:0.2rem;}
+.exercise li::marker{font-family:var(--mono); color:var(--accent);}
+.foot-nav{padding:3.5rem 0 4rem; border-top:1px solid var(--line);}
+.foot-nav-inner{display:flex; justify-content:space-between; align-items:center; gap:1.5rem; flex-wrap:wrap;}
+.foot-prev, .foot-next{text-decoration:none; display:flex; flex-direction:column; gap:0.3rem;}
+.foot-next{align-items:flex-end;}
+.foot-prev .fn-label, .foot-next .fn-label{font-family:var(--mono); color:var(--text-faint); font-size:0.75rem; text-transform:uppercase;}
+.foot-prev .fn-title, .foot-next .fn-title{font-family:var(--display); color:var(--text); font-size:1.1rem; font-weight:600; display:flex; align-items:center; gap:0.5rem;}
+.foot-prev:hover .fn-title, .foot-next:hover .fn-title{color:var(--accent);}
+.foot-meta{text-align:center; color:var(--text-faint); font-size:0.78rem; margin-top:3rem; font-family:var(--mono);}
+
+/* material/node specific */
+.node-diagram{display:flex; align-items:stretch; gap:0.8rem; margin:1.8rem 0; overflow-x:auto; padding-bottom:0.6rem;}
+.node-box{flex:0 0 auto; background:var(--bg-raised); border:1px solid var(--line); border-radius:var(--radius); min-width:150px; padding:0.9rem 1rem;}
+.node-box.principled{border-color:var(--accent-dim); background:linear-gradient(160deg, rgba(239,125,34,0.1), transparent 70%);}
+.node-box .node-title{font-family:var(--mono); font-size:0.72rem; color:var(--accent); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:0.5rem;}
+.node-box ul{margin:0; padding-left:1.1rem; font-size:0.8rem; color:var(--text-dim);}
+.node-box li{margin-bottom:0.3rem;}
+.node-arrow{display:flex; align-items:center; color:var(--text-faint); font-size:1.2rem; flex-shrink:0;}
+
+.map-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin:1.6rem 0;}
+@media (max-width:640px){ .map-grid{grid-template-columns:1fr;} }
+.map-card{background:var(--bg-raised); border:1px solid var(--line); border-radius:var(--radius); padding:1.2rem 1.3rem;}
+.map-card .swatch{width:100%; height:50px; border-radius:4px; margin-bottom:0.7rem; border:1px solid var(--line);}
+.map-card.basecolor .swatch{background:linear-gradient(90deg, #a1673a, #7a4a28);}
+.map-card.roughness .swatch{background:linear-gradient(90deg, #1a1a1a, #ececec); }
+.map-card.metallic .swatch{background:linear-gradient(90deg, #2a2a2a, #d8d8d8);}
+.map-card.normal .swatch{background:linear-gradient(90deg, #8080ff, #b0b0ff);}
+.map-card h3{font-family:var(--display); font-size:0.98rem; margin:0 0 0.4rem;}
+.map-card p{margin:0; font-size:0.86rem;}
+
+.value-scale{display:flex; align-items:center; gap:0.8rem; margin:1rem 0;}
+.value-scale .bar{flex:1; height:14px; border-radius:7px; background:linear-gradient(90deg, #101010, #f0f0f0); border:1px solid var(--line);}
+.value-scale .lbl{font-family:var(--mono); font-size:0.75rem; color:var(--text-faint); flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="grid-bg" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="#top"><span class="dot" aria-hidden="true"></span>Blender para Jogos <span class="eyebrow">· Site 4/7</span></a>
+  <nav class="topnav" aria-label="Navegação da página">
+    <a href="#shader-editor">Shader Editor</a>
+    <a href="#pbr">O que é PBR</a>
+    <a href="#principled">Principled BSDF</a>
+    <a href="#guia">Guia: materiais do baú</a>
+    <a href="#problemas">Problemas comuns</a>
+  </nav>
+</header>
+
+<main class="wrap" id="top">
+
+  <section class="hero" style="border-top:none; padding-top:4.5rem;">
+    <p class="kicker">Planejamento e Produção de Elementos Multimídia de Jogos Digitais</p>
+    <h1>Dando <em>vida material</em> ao baú.</h1>
+    <p class="lead">Com o UV do Site 3 pronto, chegou a hora de definir como a luz interage com a superfície do baú — madeira desgastada, reforços de metal — usando o mesmo padrão PBR (Physically Based Rendering) usado por qualquer engine de jogo moderna.</p>
+    <div class="hero-meta">
+      <div class="item">Parte anterior<strong>Site 3 · UV Unwrapping</strong></div>
+      <div class="item">Arquivo de partida<strong>bau_v03.blend</strong></div>
+      <div class="item">Você vai sair com<strong>bau_v04.blend</strong></div>
+      <div class="item">Próxima etapa<strong>Site 5 · Otimização</strong></div>
+    </div>
+  </section>
+
+  <section id="shader-editor">
+    <div class="sec-head"><span class="sec-num">01</span><h2>O Shader Editor</h2></div>
+    <p class="lead-in">Materiais no Blender são construídos visualmente, conectando "nodes" (nós) que representam propriedades e operações — nada de escrever código de shader na mão.</p>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <h3>Onde encontrar</h3>
+        <p>Workspace "Shading" no topo da tela, ou qualquer painel trocado para "Shader Editor". Selecione o objeto para ver/editar seu material.</p>
+      </div>
+      <div class="feat-card">
+        <h3>Adicionar um node</h3>
+        <p><span class="kbd">Shift+A</span> dentro do editor abre o menu de nodes — texturas, conversores, shaders, etc.</p>
+      </div>
+      <div class="feat-card">
+        <h3>Conectar nodes</h3>
+        <p>Arraste de uma saída (bolinha à direita de um node) até uma entrada (bolinha à esquerda de outro) para criar a conexão.</p>
+      </div>
+      <div class="feat-card">
+        <h3>Slots de material</h3>
+        <p>Um objeto pode ter vários materiais em slots diferentes (Properties → Material). Faces específicas são atribuídas a cada slot em Edit Mode.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pbr">
+    <div class="sec-head"><span class="sec-num">02</span><h2>O que é PBR, na prática</h2></div>
+    <p class="lead-in">PBR (Physically Based Rendering) é um padrão que descreve superfícies usando propriedades físicas reais, em vez de "truques" de iluminação artesanais. O resultado: o mesmo material se comporta de forma consistente e realista sob qualquer luz — e, crucialmente, <strong style="color:var(--text)">os mesmos mapas PBR funcionam tanto no Blender quanto na engine de jogo</strong> (Unity, Unreal, Godot).</p>
+
+    <p>Um material PBR completo é descrito por um pequeno conjunto de imagens (chamadas de "maps" ou "texturas"), cada uma controlando um aspecto diferente da superfície:</p>
+
+    <div class="map-grid">
+      <div class="map-card basecolor"><div class="swatch"></div><h3>Base Color / Albedo</h3><p>A cor "crua" da superfície, sem sombra nem brilho — só o pigmento. No baú: o tom marrom da madeira, o cinza do metal.</p></div>
+      <div class="map-card roughness"><div class="swatch"></div><h3>Roughness</h3><p>O quão espalhado é o reflexo de luz. Preto = espelhado, branco = fosco. Madeira desgastada tende a ser mais rugosa que metal polido.</p></div>
+      <div class="map-card metallic"><div class="swatch"></div><h3>Metallic</h3><p>Define se a superfície se comporta como metal (branco) ou não-metal/dielétrico (preto). Quase sempre é 0 ou 1 — raramente um valor intermediário.</p></div>
+      <div class="map-card normal"><div class="swatch"></div><h3>Normal Map</h3><p>Simula detalhes de relevo (arranhões, veios de madeira, rebites) sem adicionar geometria real — essencial para manter o baú leve em polígonos.</p></div>
+    </div>
+
+    <div class="callout">
+      <strong>Conexão com o material Freeware/Substance</strong>
+      <p>Se sua turma usa Substance 3D Painter (ou a alternativa freeware, texturização no Blender), é exatamente esse conjunto de mapas que a ferramenta exporta — o Shader Editor do Blender é onde esses mapas são "montados" de volta num material completo.</p>
+    </div>
+  </section>
+
+  <section id="principled">
+    <div class="sec-head"><span class="sec-num">03</span><h2>O node Principled BSDF</h2></div>
+    <p class="sec-sub">Um único node resume praticamente todo o padrão PBR — é o node padrão de qualquer material novo no Blender.</p>
+
+    <div class="node-diagram">
+      <div class="node-box">
+        <div class="node-title">Image Texture</div>
+        <ul><li>Base Color</li></ul>
+      </div>
+      <div class="node-arrow">→</div>
+      <div class="node-box principled">
+        <div class="node-title">Principled BSDF</div>
+        <ul>
+          <li>Base Color</li>
+          <li>Metallic</li>
+          <li>Roughness</li>
+          <li>Normal</li>
+          <li>Alpha</li>
+        </ul>
+      </div>
+      <div class="node-arrow">→</div>
+      <div class="node-box">
+        <div class="node-title">Material Output</div>
+        <ul><li>Surface</li></ul>
+      </div>
+    </div>
+
+    <p class="lead-in">Roughness e Metallic aceitam tanto um valor numérico simples (arrastando o slider) quanto uma textura conectada (para variar por região da superfície):</p>
+    <div class="value-scale">
+      <span class="lbl">0.0 (espelhado)</span>
+      <div class="bar"></div>
+      <span class="lbl">1.0 (totalmente fosco)</span>
+    </div>
+
+    <div class="callout warn">
+      <strong>Normal maps têm um espaço de cor diferente</strong>
+      <p>Ao conectar uma imagem de Normal Map, ligue-a através de um node "Normal Map" antes do Principled BSDF, e na Image Texture troque o Color Space de "sRGB" para "Non-Color" — normal maps não são "cores" no sentido tradicional, e o Blender precisa saber disso para interpretar os valores corretamente.</p>
+    </div>
+  </section>
+
+  <section id="guia">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Guia passo a passo — os dois materiais do baú</h2></div>
+    <p class="sec-sub">Continue a partir de <span class="kbd">bau_v03.blend</span> do Site 3. Vamos criar um material de madeira e um de metal.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <h4>Crie o material "Madeira_Bau"</h4>
+          <p>Com <span class="kbd">Bau_Corpo</span> selecionado, vá em Properties → Material → New. Renomeie o material para <span class="kbd">Madeira_Bau</span> no campo de nome.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <h4>Traga uma textura de madeira</h4>
+          <p>No Shader Editor, <span class="kbd">Shift+A</span> → Texture → Image Texture. Carregue uma imagem de madeira (de uma biblioteca livre, ex. ambientCG ou Poly Haven) e conecte a saída Color na entrada Base Color do Principled BSDF.</p>
+          <p class="why">Por quê: sem uma Image Texture conectada, a UV feita no Site 3 não tem efeito nenhum — a cor fica uniforme.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <h4>Ajuste roughness manualmente (ou com mapa)</h4>
+          <p>Se a textura baixada já incluir um mapa de roughness, conecte-o (com Color Space em Non-Color). Caso contrário, ajuste o slider de Roughness do Principled BSDF para algo entre 0.5 e 0.7 — madeira não é espelhada, mas também não é 100% fosca.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div>
+          <h4>Crie o segundo slot: "Metal_Bau"</h4>
+          <p>Ainda no <span class="kbd">Bau_Corpo</span>, adicione um segundo slot de material (botão <span class="kbd">+</span> na lista de materiais) e crie <span class="kbd">Metal_Bau</span> com Metallic = 1 e Roughness em torno de 0.3.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div>
+          <h4>Atribua as faces de reforço ao metal</h4>
+          <p>Em Edit Mode, modo face, selecione as faixas/cantoneiras que representam reforços metálicos, selecione o slot <span class="kbd">Metal_Bau</span> na lista e clique em Assign.</p>
+          <p class="why">Por quê: um objeto pode ter várias regiões com materiais diferentes — não é preciso separar em objetos novos para isso.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div>
+          <h4>Aplique material equivalente na tampa</h4>
+          <p>Repita o processo (ou reutilize os mesmos materiais, já criados) no <span class="kbd">Bau_Tampa</span> — como a UV da tampa foi empacotada no Site 3 junto com o corpo, ela deve encaixar visualmente com a textura de madeira.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="problemas">
+    <div class="sec-head"><span class="sec-num">05</span><h2>Problemas comuns e como resolver</h2></div>
+    <div class="trouble-grid">
+      <div class="trouble-item">
+        <div class="prob"><span class="tag">Problema</span><p>A textura aparece rosa/magenta no objeto.</p></div>
+        <div class="fix"><span class="tag">Causa provável</span><p>Caminho da imagem quebrado (arquivo movido ou não empacotado). Reconecte a Image Texture ou use File → External Data → Pack Resources.</p></div>
+      </div>
+      <div class="trouble-item">
+        <div class="prob"><span class="tag">Problema</span><p>A textura aparece esticada de um jeito diferente do esperado no viewport.</p></div>
+        <div class="fix"><span class="tag">Causa provável</span><p>Confira se há um node "UV Map" explícito apontando para o mapa correto — em objetos com múltiplos UV maps, o Blender pode não escolher o certo automaticamente.</p></div>
+      </div>
+      <div class="trouble-item">
+        <div class="prob"><span class="tag">Problema</span><p>O metal parece plástico fosco, não metálico.</p></div>
+        <div class="fix"><span class="tag">Causa provável</span><p>Metallic não está em 1.0, ou a cena tem pouca luz/reflexo ambiente para o metal refletir. Confira também o Roughness — metal muito rugoso perde o brilho característico.</p></div>
+      </div>
+      <div class="trouble-item">
+        <div class="prob"><span class="tag">Problema</span><p>Faces do reforço metálico não mudam ao clicar Assign.</p></div>
+        <div class="fix"><span class="tag">Causa provável</span><p>Nenhuma face estava selecionada no momento do clique, ou o slot errado estava ativo na lista de materiais. Refaça a seleção em Edit Mode antes de clicar Assign.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="roteiro">
+    <div class="sec-head"><span class="sec-num">06</span><h2>Onde estamos na série</h2></div>
+    <div class="roadmap">
+      <div class="rm-item done"><span class="rm-num">01</span><span class="rm-title">Fundamentos do Blender</span><span class="rm-tag">concluído</span></div>
+      <div class="rm-item done"><span class="rm-num">02</span><span class="rm-title">Modelagem (Poly Modeling)</span><span class="rm-tag">concluído</span></div>
+      <div class="rm-item done"><span class="rm-num">03</span><span class="rm-title">UV Unwrapping</span><span class="rm-tag">concluído</span></div>
+      <div class="rm-item active"><span class="rm-num">04</span><span class="rm-title">Materiais e Shading (PBR)</span><span class="rm-tag">você está aqui</span></div>
+      <div class="rm-item"><span class="rm-num">05</span><span class="rm-title">Otimização para game-ready assets</span><span class="rm-tag">em breve</span></div>
+      <div class="rm-item"><span class="rm-num">06</span><span class="rm-title">Exportação e integração com engines</span><span class="rm-tag">em breve</span></div>
+      <div class="rm-item"><span class="rm-num">07</span><span class="rm-title">Rigging e Animação básica</span><span class="rm-tag">em breve</span></div>
+    </div>
+  </section>
+
+  <section id="exercicio">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Fechando o arquivo desta etapa</h2></div>
+    <div class="exercise">
+      <div class="ex-kicker">Antes de seguir para o Site 5</div>
+      <h3>Confira e salve bau_v04.blend</h3>
+      <ol>
+        <li>Confirme que <span class="kbd">Bau_Corpo</span> e <span class="kbd">Bau_Tampa</span> têm os materiais <span class="kbd">Madeira_Bau</span> e <span class="kbd">Metal_Bau</span> corretamente atribuídos por face.</li>
+        <li>Renderize um preview em Material Preview ou Rendered (canto superior direito do viewport) para conferir o resultado visual antes de seguir.</li>
+        <li>Empacote as imagens externas no arquivo (File → External Data → Pack Resources) para não perder as texturas ao mover o projeto.</li>
+        <li>Salve como <strong style="color:var(--text)">bau_v04.blend</strong> — o Site 5 vai usar este arquivo para discutir contagem de polígonos e otimização.</li>
+      </ol>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot-nav">
+  <div class="wrap foot-nav-inner">
+    <a class="foot-prev" href="../blender-uv/index.html">
+      <span class="fn-label">← Anterior · Site 3 de 7</span>
+      <span class="fn-title">UV Unwrapping</span>
+    </a>
+    <a class="foot-next" href="../blender-otimizacao/index.html">
+      <span class="fn-label">Próximo · Site 5 de 7</span>
+      <span class="fn-title">Otimização para game-ready assets →</span>
+    </a>
+  </div>
+  <p class="wrap foot-meta">Planejamento e Produção de Elementos Multimídia de Jogos Digitais · Blender para Jogos · Site 4: Materiais e Shading</p>
+</footer>
+
+</body>
+</html>
